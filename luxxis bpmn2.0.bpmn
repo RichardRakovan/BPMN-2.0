@@ -1,0 +1,402 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_Luxxis" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.31.0">
+  <bpmn:collaboration id="Collaboration_Luxxis">
+    <bpmn:participant id="Participant_Luxxis" name="Luxxis Hi-Fi Equipment" processRef="Process_OrderToFulfilled" />
+    <bpmn:participant id="Participant_Customer" name="Customer" />
+    <bpmn:participant id="Participant_Supplier" name="Supplier" />
+    <bpmn:messageFlow id="MF_1" sourceRef="Participant_Customer" targetRef="Start_OrderReceived" />
+    <bpmn:messageFlow id="MF_2" sourceRef="Participant_Customer" targetRef="Task_CorrectOrder" />
+    <bpmn:messageFlow id="MF_3" sourceRef="Task_CorrectOrder" targetRef="Participant_Customer" />
+    <bpmn:messageFlow id="MF_4" sourceRef="Task_InformDelay" targetRef="Participant_Customer" />
+    <bpmn:messageFlow id="MF_5" sourceRef="Task_SendShipConf" targetRef="Participant_Customer" />
+    <bpmn:messageFlow id="MF_6" sourceRef="Task_SendInvoice" targetRef="Participant_Customer" />
+    <bpmn:messageFlow id="MF_7" sourceRef="Participant_Customer" targetRef="Event_PaymentReceived" />
+    <bpmn:messageFlow id="MF_8" sourceRef="Task_OrderMissing" targetRef="Participant_Supplier" />
+    <bpmn:messageFlow id="MF_9" sourceRef="Participant_Supplier" targetRef="Event_ItemsArrived" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_OrderToFulfilled" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="Lane_Sales" name="Sales manager">
+        <bpmn:flowNodeRef>Task_CorrectOrder</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Accounting" name="Accounting">
+        <bpmn:flowNodeRef>Start_OrderReceived</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CheckValid</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GW_Valid</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GW_MergeValid</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_GenInvoice</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SendInvoice</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_PaymentReceived</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_OrderFulfilled</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GW_Split</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GW_Join</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CloseCase</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Warehouse" name="Warehouse team">
+        <bpmn:flowNodeRef>Task_CheckAvail</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_OrderMissing</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GW_MergeShip</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SendShipConf</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PackShip</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_ItemsArrived</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_InformDelay</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GW_Avail</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_OrderReceived" name="Order received">
+      <bpmn:outgoing>SF_1</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MED_Start_OrderReceived" />
+    </bpmn:startEvent>
+    <bpmn:task id="Task_CheckValid" name="Check if order is valid">
+      <bpmn:incoming>SF_1</bpmn:incoming>
+      <bpmn:outgoing>SF_2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="GW_Valid" name="Order valid?">
+      <bpmn:incoming>SF_2</bpmn:incoming>
+      <bpmn:outgoing>SF_3</bpmn:outgoing>
+      <bpmn:outgoing>SF_4</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="GW_MergeValid">
+      <bpmn:incoming>SF_3</bpmn:incoming>
+      <bpmn:incoming>SF_5</bpmn:incoming>
+      <bpmn:outgoing>SF_6</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_GenInvoice" name="Create invoice">
+      <bpmn:incoming>SF_7</bpmn:incoming>
+      <bpmn:outgoing>SF_9</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:sendTask id="Task_SendInvoice" name="Send invoice to customer">
+      <bpmn:incoming>SF_19</bpmn:incoming>
+      <bpmn:outgoing>SF_20</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:intermediateCatchEvent id="Event_PaymentReceived" name="Payment received">
+      <bpmn:incoming>SF_20</bpmn:incoming>
+      <bpmn:outgoing>SF_21</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MED_Event_PaymentReceived" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:endEvent id="End_OrderFulfilled" name="Order fulfilled">
+      <bpmn:incoming>SF_22</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="Task_CheckAvail" name="Check if ordered items are available">
+      <bpmn:incoming>SF_8</bpmn:incoming>
+      <bpmn:outgoing>SF_10</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:sendTask id="Task_OrderMissing" name="Order missing items from supplier">
+      <bpmn:incoming>SF_12</bpmn:incoming>
+      <bpmn:outgoing>SF_13</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:exclusiveGateway id="GW_MergeShip">
+      <bpmn:incoming>SF_11</bpmn:incoming>
+      <bpmn:incoming>SF_15</bpmn:incoming>
+      <bpmn:outgoing>SF_16</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sendTask id="Task_SendShipConf" name="Send shipping confirmation to customer">
+      <bpmn:incoming>SF_17</bpmn:incoming>
+      <bpmn:outgoing>SF_18</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:sequenceFlow id="SF_1" sourceRef="Start_OrderReceived" targetRef="Task_CheckValid" />
+    <bpmn:sequenceFlow id="SF_2" sourceRef="Task_CheckValid" targetRef="GW_Valid" />
+    <bpmn:sequenceFlow id="SF_3" name="YES" sourceRef="GW_Valid" targetRef="GW_MergeValid" />
+    <bpmn:sequenceFlow id="SF_4" name="NO" sourceRef="GW_Valid" targetRef="Task_CorrectOrder" />
+    <bpmn:sequenceFlow id="SF_5" sourceRef="Task_CorrectOrder" targetRef="GW_MergeValid" />
+    <bpmn:sequenceFlow id="SF_6" sourceRef="GW_MergeValid" targetRef="GW_Split" />
+    <bpmn:sequenceFlow id="SF_7" sourceRef="GW_Split" targetRef="Task_GenInvoice" />
+    <bpmn:sequenceFlow id="SF_8" sourceRef="GW_Split" targetRef="Task_CheckAvail" />
+    <bpmn:sequenceFlow id="SF_9" sourceRef="Task_GenInvoice" targetRef="GW_Join" />
+    <bpmn:sequenceFlow id="SF_10" sourceRef="Task_CheckAvail" targetRef="GW_Avail" />
+    <bpmn:sequenceFlow id="SF_11" name="YES" sourceRef="GW_Avail" targetRef="GW_MergeShip" />
+    <bpmn:sequenceFlow id="SF_12" name="NO" sourceRef="GW_Avail" targetRef="Task_OrderMissing" />
+    <bpmn:sequenceFlow id="SF_13" sourceRef="Task_OrderMissing" targetRef="Task_InformDelay" />
+    <bpmn:sequenceFlow id="SF_14" sourceRef="Task_InformDelay" targetRef="Event_ItemsArrived" />
+    <bpmn:sequenceFlow id="SF_15" sourceRef="Event_ItemsArrived" targetRef="GW_MergeShip" />
+    <bpmn:sequenceFlow id="SF_16" sourceRef="GW_MergeShip" targetRef="Task_PackShip" />
+    <bpmn:sequenceFlow id="SF_17" sourceRef="Task_PackShip" targetRef="Task_SendShipConf" />
+    <bpmn:sequenceFlow id="SF_18" sourceRef="Task_SendShipConf" targetRef="GW_Join" />
+    <bpmn:sequenceFlow id="SF_19" sourceRef="GW_Join" targetRef="Task_SendInvoice" />
+    <bpmn:sequenceFlow id="SF_20" sourceRef="Task_SendInvoice" targetRef="Event_PaymentReceived" />
+    <bpmn:sequenceFlow id="SF_21" sourceRef="Event_PaymentReceived" targetRef="Task_CloseCase" />
+    <bpmn:sequenceFlow id="SF_22" sourceRef="Task_CloseCase" targetRef="End_OrderFulfilled" />
+    <bpmn:parallelGateway id="GW_Split">
+      <bpmn:incoming>SF_6</bpmn:incoming>
+      <bpmn:outgoing>SF_7</bpmn:outgoing>
+      <bpmn:outgoing>SF_8</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:task id="Task_CorrectOrder" name="Contact customer and correct order">
+      <bpmn:incoming>SF_4</bpmn:incoming>
+      <bpmn:outgoing>SF_5</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_PackShip" name="Pack and ship items">
+      <bpmn:incoming>SF_16</bpmn:incoming>
+      <bpmn:outgoing>SF_17</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:intermediateCatchEvent id="Event_ItemsArrived" name="Ordered items arrived">
+      <bpmn:incoming>SF_14</bpmn:incoming>
+      <bpmn:outgoing>SF_15</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MED_Event_ItemsArrived" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:parallelGateway id="GW_Join">
+      <bpmn:incoming>SF_9</bpmn:incoming>
+      <bpmn:incoming>SF_18</bpmn:incoming>
+      <bpmn:outgoing>SF_19</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:task id="Task_CloseCase" name="Close the case">
+      <bpmn:incoming>SF_21</bpmn:incoming>
+      <bpmn:outgoing>SF_22</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:sendTask id="Task_InformDelay" name="Inform customer about delayed delivery">
+      <bpmn:incoming>SF_13</bpmn:incoming>
+      <bpmn:outgoing>SF_14</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:exclusiveGateway id="GW_Avail" name="Items available?">
+      <bpmn:incoming>SF_10</bpmn:incoming>
+      <bpmn:outgoing>SF_11</bpmn:outgoing>
+      <bpmn:outgoing>SF_12</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_Luxxis">
+      <bpmndi:BPMNShape id="Participant_Luxxis_di" bpmnElement="Participant_Luxxis" isHorizontal="true">
+        <dc:Bounds x="160" y="180" width="2630" height="740" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Warehouse_di" bpmnElement="Lane_Warehouse" isHorizontal="true">
+        <dc:Bounds x="190" y="530" width="2600" height="390" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Accounting_di" bpmnElement="Lane_Accounting" isHorizontal="true">
+        <dc:Bounds x="190" y="330" width="2600" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Sales_di" bpmnElement="Lane_Sales" isHorizontal="true">
+        <dc:Bounds x="190" y="180" width="2600" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_OrderReceived_di" bpmnElement="Start_OrderReceived">
+        <dc:Bounds x="252" y="412" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="240" y="455" width="60" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CheckValid_di" bpmnElement="Task_CheckValid">
+        <dc:Bounds x="340" y="390" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_Valid_di" bpmnElement="GW_Valid" isMarkerVisible="true">
+        <dc:Bounds x="495" y="405" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="485" y="460" width="70" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_MergeValid_di" bpmnElement="GW_MergeValid" isMarkerVisible="true">
+        <dc:Bounds x="775" y="405" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_GenInvoice_di" bpmnElement="Task_GenInvoice">
+        <dc:Bounds x="980" y="390" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SendInvoice_di" bpmnElement="Task_SendInvoice">
+        <dc:Bounds x="2230" y="390" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_PaymentReceived_di" bpmnElement="Event_PaymentReceived">
+        <dc:Bounds x="2402" y="412" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2375" y="463" width="89" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_OrderFulfilled_di" bpmnElement="End_OrderFulfilled">
+        <dc:Bounds x="2672" y="412" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2650" y="455" width="80" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CheckAvail_di" bpmnElement="Task_CheckAvail">
+        <dc:Bounds x="980" y="580" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_OrderMissing_di" bpmnElement="Task_OrderMissing">
+        <dc:Bounds x="1250" y="730" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_MergeShip_di" bpmnElement="GW_MergeShip" isMarkerVisible="true">
+        <dc:Bounds x="1675" y="595" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SendShipConf_di" bpmnElement="Task_SendShipConf">
+        <dc:Bounds x="1940" y="580" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_Split_di" bpmnElement="GW_Split">
+        <dc:Bounds x="895" y="405" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CorrectOrder_di" bpmnElement="Task_CorrectOrder">
+        <dc:Bounds x="600" y="230" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PackShip_di" bpmnElement="Task_PackShip">
+        <dc:Bounds x="1750" y="580" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_ItemsArrived_di" bpmnElement="Event_ItemsArrived">
+        <dc:Bounds x="1582" y="742" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1565" y="702" width="70" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_Join_di" bpmnElement="GW_Join">
+        <dc:Bounds x="2045" y="405" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CloseCase_di" bpmnElement="Task_CloseCase">
+        <dc:Bounds x="2530" y="390" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_InformDelay_di" bpmnElement="Task_InformDelay">
+        <dc:Bounds x="1380" y="730" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="GW_Avail_di" bpmnElement="GW_Avail" isMarkerVisible="true">
+        <dc:Bounds x="1165" y="595" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1150" y="557" width="80" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SF_1_di" bpmnElement="SF_1">
+        <di:waypoint x="288" y="430" />
+        <di:waypoint x="340" y="430" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF_2_di" bpmnElement="SF_2">
+        <di:waypoint x="440" y="430" />
+        <di:waypoint x="495" y="430" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF_3_di" bpmnElement="SF_3">
+        <di:waypoint x="545" y="430" />
+        <di:waypoint x="775" y="430" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="558" y="412" width="23" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF_4_di" bpmnElement="SF_4">
+        <di:waypoint x="520" y="405" />
+        <di:waypoint x="520" y="270" />
+        <di:waypoint x="600" y="270" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="527" y="373" width="17" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF_5_di" bpmnElement="SF_5">
+        <di:waypoint x="700" y="270" />
+        <di:waypoint x="800" y="270" />
+        <di:waypoint x="800" y="405" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF_6_di" bpmnElement="SF_6">
+        <di:waypoint x="825" y="430" />
+        <di:waypoint x="895" y="430" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF_7_di" bpmnElement="SF_7">
+        <di:waypoint x="945" y="430" />
+        <di:waypoint x="980" y="430" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF_8_di" bpmnElement="SF_8">
+        <di:waypoint x="920" y="455" />
+        <di:waypoint x="920" y="620" />
+        <di:waypoint x="980" y="620" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF_9_di" bpmnElement="SF_9">
+        <di:waypoint x="1080" y="430" />
+        <di:waypoint x="2045" y="430" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF_10_di" bpmnElement="SF_10">
+        <di:waypoint x="1080" y="620" />
+        <di:waypoint x="1165" y="620" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF_11_di" bpmnElement="SF_11">
+        <di:waypoint x="1215" y="620" />
+        <di:waypoint x="1675" y="620" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1218" y="593" width="23" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF_12_di" bpmnElement="SF_12">
+        <di:waypoint x="1190" y="645" />
+        <di:waypoint x="1190" y="770" />
+        <di:waypoint x="1250" y="770" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1198" y="663" width="17" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF_13_di" bpmnElement="SF_13">
+        <di:waypoint x="1350" y="770" />
+        <di:waypoint x="1380" y="770" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF_14_di" bpmnElement="SF_14">
+        <di:waypoint x="1480" y="770" />
+        <di:waypoint x="1546" y="770" />
+        <di:waypoint x="1546" y="760" />
+        <di:waypoint x="1582" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF_15_di" bpmnElement="SF_15">
+        <di:waypoint x="1618" y="760" />
+        <di:waypoint x="1700" y="760" />
+        <di:waypoint x="1700" y="645" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF_16_di" bpmnElement="SF_16">
+        <di:waypoint x="1725" y="620" />
+        <di:waypoint x="1750" y="620" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF_17_di" bpmnElement="SF_17">
+        <di:waypoint x="1850" y="620" />
+        <di:waypoint x="1940" y="620" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF_18_di" bpmnElement="SF_18">
+        <di:waypoint x="2040" y="620" />
+        <di:waypoint x="2070" y="620" />
+        <di:waypoint x="2070" y="455" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF_19_di" bpmnElement="SF_19">
+        <di:waypoint x="2095" y="430" />
+        <di:waypoint x="2230" y="430" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF_20_di" bpmnElement="SF_20">
+        <di:waypoint x="2330" y="430" />
+        <di:waypoint x="2402" y="430" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF_21_di" bpmnElement="SF_21">
+        <di:waypoint x="2438" y="430" />
+        <di:waypoint x="2530" y="430" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF_22_di" bpmnElement="SF_22">
+        <di:waypoint x="2630" y="430" />
+        <di:waypoint x="2672" y="430" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Participant_Customer_di" bpmnElement="Participant_Customer" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="2620" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Participant_Supplier_di" bpmnElement="Participant_Supplier" isHorizontal="true">
+        <dc:Bounds x="160" y="980" width="2630" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="MF_1_di" bpmnElement="MF_1">
+        <di:waypoint x="270" y="140" />
+        <di:waypoint x="270" y="412" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_2_di" bpmnElement="MF_2">
+        <di:waypoint x="630" y="140" />
+        <di:waypoint x="630" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_3_di" bpmnElement="MF_3">
+        <di:waypoint x="670" y="230" />
+        <di:waypoint x="670" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_4_di" bpmnElement="MF_4">
+        <di:waypoint x="1400" y="730" />
+        <di:waypoint x="1400" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_5_di" bpmnElement="MF_5">
+        <di:waypoint x="1960" y="580" />
+        <di:waypoint x="1960" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_6_di" bpmnElement="MF_6">
+        <di:waypoint x="2250" y="390" />
+        <di:waypoint x="2250" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_7_di" bpmnElement="MF_7">
+        <di:waypoint x="2420" y="140" />
+        <di:waypoint x="2420" y="412" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_8_di" bpmnElement="MF_8">
+        <di:waypoint x="1270" y="810" />
+        <di:waypoint x="1270" y="980" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_9_di" bpmnElement="MF_9">
+        <di:waypoint x="1600" y="980" />
+        <di:waypoint x="1600" y="778" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
